@@ -1,7 +1,6 @@
 package core.basesyntax;
 
 import java.util.NoSuchElementException;
-import java.util.Objects;
 
 public class ArrayList<T> implements List<T> {
 
@@ -9,8 +8,7 @@ public class ArrayList<T> implements List<T> {
     private int size;
     private Object[] data;
 
-    @Override
-    public void add(T value) {
+    private void checkSize() {
         if (data == null || data.length <= size) {
             Object[] newData =
                     new Object[data == null ? DEFAULT_CAPACITY : (int) (data.length * 1.5)];
@@ -21,6 +19,17 @@ public class ArrayList<T> implements List<T> {
 
             data = newData;
         }
+    }
+
+    private void checkIndex(int index) {
+        if (index < 0 || index >= size) {
+            throw new ArrayListIndexOutOfBoundsException("Invalid index");
+        }
+    }
+
+    @Override
+    public void add(T value) {
+        checkSize();
 
         data[size] = value;
         size++;
@@ -37,16 +46,7 @@ public class ArrayList<T> implements List<T> {
             return;
         }
 
-        if (data.length == size) {
-            Object[] newData = new Object[(int) (size * 1.5)];
-
-            System.arraycopy(data, 0, newData, 0, index);
-            System.arraycopy(data, index, newData, index + 1, size - index);
-            newData[index] = value;
-            data = newData;
-            size++;
-            return;
-        }
+        checkSize();
 
         for (int i = size - 1; i >= index; i--) {
             data[i + 1] = data[i];
@@ -57,7 +57,7 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public void addAll(List<T> list) {
-        int j = 0;
+        int indexElement = 0;
 
         if (data == null) {
             data = new Object[DEFAULT_CAPACITY];
@@ -67,8 +67,8 @@ public class ArrayList<T> implements List<T> {
             Object[] newData = new Object[(int) (Math.max(size + list.size(), data.length * 1.5))];
             System.arraycopy(data, 0, newData, 0, size);
             for (int i = size; i < size + list.size(); i++) {
-                newData[i] = list.get(j);
-                j++;
+                newData[i] = list.get(indexElement);
+                indexElement++;
             }
             data = newData;
             size += list.size();
@@ -76,25 +76,21 @@ public class ArrayList<T> implements List<T> {
         }
 
         for (int i = size; i < size + list.size(); i++) {
-            data[i] = list.get(j);
-            j++;
+            data[i] = list.get(indexElement);
+            indexElement++;
         }
         size += list.size();
     }
 
     @Override
     public T get(int index) {
-        if (index < 0 || index >= size) {
-            throw new ArrayListIndexOutOfBoundsException("Can't get value, invalid index");
-        }
+        checkIndex(index);
         return (T) data[index];
     }
 
     @Override
     public void set(T value, int index) {
-        if (index < 0 || index >= size) {
-            throw new ArrayListIndexOutOfBoundsException("Can't set value, invalid index");
-        }
+        checkIndex(index);
 
         data[index] = value;
     }
@@ -102,9 +98,7 @@ public class ArrayList<T> implements List<T> {
     @Override
     public T remove(int index) {
         T value;
-        if (index < 0 || index >= size) {
-            throw new ArrayListIndexOutOfBoundsException("Can't remove value, invalid index");
-        }
+        checkIndex(index);
         value = (T) data[index];
         for (int i = index; i < size - 1; i++) {
             data[i] = data[i + 1];
@@ -116,7 +110,7 @@ public class ArrayList<T> implements List<T> {
     @Override
     public T remove(T element) {
         for (int i = 0; i < size; i++) {
-            if (Objects.equals(element, data[i])) {
+            if (data[i] == element || data[i] != null && data[i].equals(element)) {
                 for (int j = i; j < size - 1; j++) {
                     data[j] = data[j + 1];
                 }
